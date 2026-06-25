@@ -25,6 +25,8 @@ const routes = [
   {
     path: "/dang-ky",
     component: () => import("../components/Admin/DangKy.vue"),
+    meta: { layout: "index" },
+
   },
   // {
   //   path: "/admin/phan-quyen",
