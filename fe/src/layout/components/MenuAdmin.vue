@@ -15,6 +15,12 @@
         <span>Quản lý Tài Khoản</span>
       </router-link>
 
+      <!-- Thông tin bệnh viện -->
+      <router-link to="/admin/gioi-thieu" class="menu-item" active-class="active">
+        <i class="fa-solid fa-hospital icon"></i>
+        <span>Thông tin Bệnh Viện</span>
+      </router-link>
+
       <!-- QUẢN LÝ TOUR -->
       <div class="menu-group">
         <div class="menu-item dropdown" @click="toggleTour">

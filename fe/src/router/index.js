@@ -18,6 +18,11 @@ const routes = [
     // beforeEnter: checkToken,
   },
   {
+    path: "/admin/gioi-thieu",
+    component: () => import("../components/Admin/About.vue"),
+    // beforeEnter: checkToken,
+  },
+  {
     path: "/dang-nhap",
     component: () => import("../components/Admin/DangNhap.vue"),
   },
