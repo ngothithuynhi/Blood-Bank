@@ -45,7 +45,7 @@ class TaiKhoanController extends Controller
     public function show($id)
     {
         $taiKhoan = TaiKhoan::find($id);
-        
+
         if (!$taiKhoan) {
             return response()->json(['message' => 'Tài khoản không tìm thấy'], 404);
         }
@@ -59,7 +59,7 @@ class TaiKhoanController extends Controller
     public function update(Request $request, $id)
     {
         $taiKhoan = TaiKhoan::find($id);
-        
+
         if (!$taiKhoan) {
             return response()->json(['message' => 'Tài khoản không tìm thấy'], 404);
         }
@@ -90,12 +90,62 @@ class TaiKhoanController extends Controller
     public function destroy($id)
     {
         $taiKhoan = TaiKhoan::find($id);
-        
+
         if (!$taiKhoan) {
             return response()->json(['message' => 'Tài khoản không tìm thấy'], 404);
         }
 
         $taiKhoan->delete();
         return response()->json(['message' => 'Xóa tài khoản thành công'], 200);
+    }
+
+    // Đăng nhập cho user/admin
+    public function dangNhap(Request $request)
+    {
+        $request->validate([
+            'ten_dang_nhap' => 'required',
+            'mat_khau' => 'required',
+        ]);
+
+        $taiKhoan = TaiKhoan::where('ten_dang_nhap', $request->ten_dang_nhap)->first();
+
+        if (!$taiKhoan || !Hash::check($request->mat_khau, $taiKhoan->mat_khau)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Tên đăng nhập hoặc mật khẩu không chính xác'
+            ]);
+        }
+
+        if ($taiKhoan->trang_thai !== 'active') {
+            return response()->json([
+                'status' => false,
+                'message' => 'Tài khoản đã bị khóa'
+            ]);
+        }
+
+        $token = $taiKhoan->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Đăng nhập thành công',
+            'token' => $token,
+            'user' => $taiKhoan
+        ]);
+    }
+
+    // Logout chung cho tất cả user/admin
+    public function dangXuat(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user && $user->currentAccessToken()) {
+            $user->currentAccessToken()->delete();
+            return response()->json([
+                'status' => true,
+                'message' => 'Đăng xuất thành công'
+            ]);
+        }
+
+        return response()->json(['status' => false, 'message' => 'Token không hợp lệ'], 401);
     }
 }
