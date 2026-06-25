@@ -11,6 +11,7 @@ const routes = [
     path: "/admin/nguoi-dung",
     component: () => import("../components/Admin/NguoiDung.vue"),
     // beforeEnter: checkToken,
+        meta: { layout: "index" },
   },
   {
     path: "/admin/kho-mau",

@@ -1,13 +1,7 @@
 <template>
     <div class="admin-layout">
 
-        <!-- SIDEBAR -->
-        <MenuAdmin class="sidebar" />
-
         <div class="main-area">
-
-            <!-- HEADER -->
-            <TopAdmin />
 
             <!-- CONTENT -->
             <div class="page-content content-wrapper" style="margin-top: 70px;">
