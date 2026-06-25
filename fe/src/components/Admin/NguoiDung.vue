@@ -25,15 +25,15 @@
 
         <select v-model="selectedRole">
           <option value="">Tất cả vai trò</option>
-          <option value="Admin">Admin</option>
-          <option value="Donor">Donor</option>
-          <option value="Procurer">Procurer</option>
+          <option value="admin">Admin</option>
+          <option value="donor">Donor</option>
+          <option value="procurer">Procurer</option>
         </select>
 
         <select v-model="selectedStatus">
           <option value="">Tất cả trạng thái</option>
-          <option value="Hoạt động">Hoạt động</option>
-          <option value="Đã khóa">Đã khóa</option>
+          <option value="active">Hoạt động</option>
+          <option value="locked">Đã khóa</option>
         </select>
       </div>
 
@@ -61,26 +61,20 @@
 
             <td>
               <span class="badge" :class="roleClass(user.vai_tro)">
-                {{ user.vai_tro }}
+                {{ formatRole(user.vai_tro) }}
               </span>
             </td>
 
             <td>
               <span class="status" :class="statusClass(user.trang_thai)">
-                {{ user.trang_thai }}
+                {{ formatStatus(user.trang_thai) }}
               </span>
             </td>
 
             <td class="actions">
               <button class="btn view" @click="viewUser(user)">Xem</button>
               <button class="btn edit" @click="editUser(user)">Sửa</button>
-              <button
-                class="btn lock"
-                v-if="user.trang_thai === 'Hoạt động'"
-              >
-                Khóa
-              </button>
-              <button class="btn unlock" v-else>Mở khóa</button>
+              <button class="btn lock" @click="deleteUser(user)">Xóa</button>
             </td>
           </tr>
         </tbody>
@@ -93,12 +87,12 @@
 
         <form @submit.prevent="saveUser">
           <label>Mã tài khoản</label>
-          <input v-model="form.ma_tai_khoan" type="text" />
+          <input v-model="form.ma_tai_khoan" type="text" :disabled="isEdit" />
 
           <label>Tên đăng nhập</label>
           <input v-model="form.ten_dang_nhap" type="text" />
 
-          <label>Mật khẩu</label>
+          <label>Mật khẩu <span v-if="isEdit" style="font-size: 12px; color: #777;">(Bỏ trống nếu không đổi)</span></label>
           <input v-model="form.mat_khau" type="password" />
 
           <label>Họ tên</label>
@@ -112,15 +106,15 @@
 
           <label>Vai trò</label>
           <select v-model="form.vai_tro">
-            <option value="Admin">Admin</option>
-            <option value="Donor">Donor</option>
-            <option value="Procurer">Procurer</option>
+            <option value="admin">Admin</option>
+            <option value="donor">Donor</option>
+            <option value="procurer">Procurer</option>
           </select>
 
           <label>Trạng thái</label>
           <select v-model="form.trang_thai">
-            <option value="Hoạt động">Hoạt động</option>
-            <option value="Đã khóa">Đã khóa</option>
+            <option value="active">Hoạt động</option>
+            <option value="locked">Đã khóa</option>
           </select>
 
           <div class="modal-actions">
@@ -136,139 +130,230 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref } from 'vue'
+import axios from "axios";
+import { ref, reactive, computed, onMounted } from "vue";
 
-const keyword = ref('')
-const selectedRole = ref('')
-const selectedStatus = ref('')
-const showModal = ref(false)
-const isEdit = ref(false)
+// =======================
+// DATA
+// =======================
+const keyword = ref("");
+const selectedRole = ref("");
+const selectedStatus = ref("");
 
-const users = ref([
-  {
-    ma_tai_khoan: 'TK001',
-    ten_dang_nhap: 'admin01',
-    mat_khau: '123456',
-    ho_ten: 'Nguyễn Văn A',
-    email: 'admin@gmail.com',
-    so_dien_thoai: '0901234567',
-    vai_tro: 'Admin',
-    trang_thai: 'Hoạt động'
-  },
-  {
-    ma_tai_khoan: 'TK002',
-    ten_dang_nhap: 'donor01',
-    mat_khau: '123456',
-    ho_ten: 'Trần Thị B',
-    email: 'donor@gmail.com',
-    so_dien_thoai: '0912345678',
-    vai_tro: 'Donor',
-    trang_thai: 'Hoạt động'
-  },
-  {
-    ma_tai_khoan: 'TK003',
-    ten_dang_nhap: 'user01',
-    mat_khau: '123456',
-    ho_ten: 'Lê Văn C',
-    email: 'user@gmail.com',
-    so_dien_thoai: '0987654321',
-    vai_tro: 'Procurer',
-    trang_thai: 'Đã khóa'
-  }
-])
+const showModal = ref(false);
+const isEdit = ref(false);
+
+const users = ref([]);
 
 const form = reactive({
-  ma_tai_khoan: '',
-  ten_dang_nhap: '',
-  mat_khau: '',
-  ho_ten: '',
-  email: '',
-  so_dien_thoai: '',
-  vai_tro: 'Donor',
-  trang_thai: 'Hoạt động'
-})
+    ma_tai_khoan: "",
+    ten_dang_nhap: "",
+    mat_khau: "",
+    ho_ten: "",
+    email: "",
+    so_dien_thoai: "",
+    vai_tro: "donor",
+    trang_thai: "active",
+});
 
+// =======================
+// LOAD DATA
+// =======================
+onMounted(() => {
+    getTaiKhoan();
+});
+
+function getTaiKhoan() {
+    axios
+        .get("http://127.0.0.1:8000/api/admin/tai-khoan/get-data")
+        .then((res) => {
+            // Lấy chính xác mảng data từ API trả về
+            if (res.data.status) {
+                users.value = res.data.data;
+            } else {
+                users.value = res.data; // Phòng trường hợp API không bọc trong res.data.data
+            }
+        })
+        .catch((err) => {
+            console.log("Lỗi lấy dữ liệu:", err);
+        });
+}
+
+// =======================
+// FILTER
+// =======================
 const filteredUsers = computed(() => {
-  return users.value.filter(user => {
-    const text = keyword.value.toLowerCase()
+    return users.value.filter((user) => {
+        const text = keyword.value.toLowerCase();
 
-    const matchKeyword =
-      user.ho_ten.toLowerCase().includes(text) ||
-      user.email.toLowerCase().includes(text) ||
-      user.so_dien_thoai.includes(text)
+        const matchKeyword =
+            user.ho_ten?.toLowerCase().includes(text) ||
+            user.email?.toLowerCase().includes(text) ||
+            user.so_dien_thoai?.includes(text) ||
+            user.ten_dang_nhap?.toLowerCase().includes(text);
 
-    const matchRole =
-      selectedRole.value === '' || user.vai_tro === selectedRole.value
+        const matchRole =
+            selectedRole.value === "" ||
+            user.vai_tro === selectedRole.value;
 
-    const matchStatus =
-      selectedStatus.value === '' || user.trang_thai === selectedStatus.value
+        const matchStatus =
+            selectedStatus.value === "" ||
+            user.trang_thai === selectedStatus.value;
 
-    return matchKeyword && matchRole && matchStatus
-  })
-})
+        return matchKeyword && matchRole && matchStatus;
+    });
+});
 
+// =======================
+// MODAL
+// =======================
 function openModal() {
-  isEdit.value = false
-  resetForm()
-  showModal.value = true
+    isEdit.value = false;
+    resetForm();
+    showModal.value = true;
 }
 
 function closeModal() {
-  showModal.value = false
+    showModal.value = false;
 }
 
-function editUser(user) {
-  isEdit.value = true
-  Object.assign(form, user)
-  showModal.value = true
-}
-
+// =======================
+// XEM CHI TIẾT
+// =======================
 function viewUser(user) {
-  alert(`Thông tin người dùng: ${user.ho_ten}`)
+    axios
+        .post("http://127.0.0.1:8000/api/admin/tai-khoan/chi-tiet", {
+            ma_tai_khoan: user.ma_tai_khoan
+        })
+        .then((res) => {
+            const data = res.data.data;
+
+            alert(`Mã tài khoản: ${data.ma_tai_khoan}\nTên đăng nhập: ${data.ten_dang_nhap}\nHọ tên: ${data.ho_ten}\nEmail: ${data.email}\nSĐT: ${data.so_dien_thoai}\nVai trò: ${formatRole(data.vai_tro)}\nTrạng thái: ${formatStatus(data.trang_thai)}`);
+        })
+        .catch((err) => {
+            console.log(err);
+            alert("Lỗi lấy chi tiết!");
+        });
 }
 
+// =======================
+// SỬA
+// =======================
+function editUser(user) {
+    isEdit.value = true;
+
+    Object.assign(form, {
+        ma_tai_khoan: user.ma_tai_khoan,
+        ten_dang_nhap: user.ten_dang_nhap,
+        mat_khau: "",
+        ho_ten: user.ho_ten,
+        email: user.email,
+        so_dien_thoai: user.so_dien_thoai,
+        vai_tro: user.vai_tro,
+        trang_thai: user.trang_thai,
+    });
+
+    showModal.value = true;
+}
+
+// =======================
+// THÊM / CẬP NHẬT
+// =======================
 function saveUser() {
-  if (isEdit.value) {
-    const index = users.value.findIndex(
-      user => user.ma_tai_khoan === form.ma_tai_khoan
-    )
-
-    if (index !== -1) {
-      users.value[index] = { ...form }
+    if (isEdit.value) {
+        axios
+            .post("http://127.0.0.1:8000/api/admin/tai-khoan/sua-tai-khoan", form)
+            .then(() => {
+                alert("Cập nhật thành công!");
+                getTaiKhoan();
+                closeModal();
+            })
+            .catch((err) => {
+                console.log(err);
+                alert("Cập nhật thất bại!");
+            });
+    } else {
+        axios
+            .post("http://127.0.0.1:8000/api/admin/tai-khoan/them-tai-khoan", form)
+            .then(() => {
+                alert("Thêm tài khoản thành công!");
+                getTaiKhoan();
+                closeModal();
+            })
+            .catch((err) => {
+                console.log(err);
+                alert("Thêm tài khoản thất bại!");
+            });
     }
-  } else {
-    users.value.push({ ...form })
-  }
-
-  closeModal()
 }
 
+// =======================
+// XÓA
+// =======================
+function deleteUser(user) {
+    if (!confirm(`Bạn có chắc muốn xóa tài khoản ${user.ten_dang_nhap}?`)) {
+        return;
+    }
+
+    axios
+        .post("http://127.0.0.1:8000/api/admin/tai-khoan/xoa-tai-khoan", {
+            ma_tai_khoan: user.ma_tai_khoan
+        })
+        .then(() => {
+            alert("Xóa thành công!");
+            getTaiKhoan();
+        })
+        .catch((err) => {
+            console.log(err);
+            alert("Xóa thất bại!");
+        });
+}
+
+// =======================
+// RESET FORM
+// =======================
 function resetForm() {
-  Object.assign(form, {
-    ma_tai_khoan: '',
-    ten_dang_nhap: '',
-    mat_khau: '',
-    ho_ten: '',
-    email: '',
-    so_dien_thoai: '',
-    vai_tro: 'Donor',
-    trang_thai: 'Hoạt động'
-  })
+    Object.assign(form, {
+        ma_tai_khoan: "",
+        ten_dang_nhap: "",
+        mat_khau: "",
+        ho_ten: "",
+        email: "",
+        so_dien_thoai: "",
+        vai_tro: "donor",
+        trang_thai: "active",
+    });
 }
 
+// =======================
+// CSS CLASS & HIỂN THỊ
+// =======================
 function roleClass(role) {
-  return {
-    admin: role === 'Admin',
-    donor: role === 'Donor',
-    procurer: role === 'Procurer'
-  }
+    return {
+        admin: role === "admin",
+        donor: role === "donor",
+        procurer: role === "procurer",
+    };
 }
 
 function statusClass(status) {
-  return {
-    active: status === 'Hoạt động',
-    locked: status === 'Đã khóa'
-  }
+    return {
+        active: status === "active",
+        locked: status === "locked",
+    };
+}
+
+function formatRole(role) {
+    if (role === "admin") return "Admin";
+    if (role === "donor") return "Donor";
+    if (role === "procurer") return "Procurer";
+    return role;
+}
+
+function formatStatus(status) {
+    if (status === "active") return "Hoạt động";
+    if (status === "locked") return "Đã khóa";
+    return status;
 }
 </script>
 
@@ -375,6 +460,7 @@ tr:hover {
   border-radius: 6px;
   cursor: pointer;
   color: white;
+  margin-right: 4px;
 }
 
 .primary {
