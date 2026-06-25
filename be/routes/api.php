@@ -4,6 +4,8 @@ use App\Http\Controllers\TaiKhoanController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+Route::post('/dang-nhap', [TaiKhoanController::class, 'dangNhap']);
+
 Route::prefix('admin')->group(function () {
     // Sửa lại URL và phương thức cho khớp hoàn toàn với FE và Controller
     Route::get('tai-khoan/get-data', [TaiKhoanController::class, 'getTaiKhoan']);
