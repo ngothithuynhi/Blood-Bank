@@ -11,22 +11,24 @@ const routes = [
     path: "/admin/nguoi-dung",
     component: () => import("../components/Admin/NguoiDung.vue"),
     // beforeEnter: checkToken,
-        meta: { layout: "index" },
+    meta: { layout: "index" },
+    
   },
   {
     path: "/admin/kho-mau",
     component: () => import("../components/Admin/KhoMau.vue"),
     // beforeEnter: checkToken,
+    meta: { layout: "index" },
   },
   {
     path: "/dang-nhap",
     component: () => import("../components/Admin/DangNhap.vue"),
+    meta: { layout: "index" },
   },
   {
     path: "/dang-ky",
     component: () => import("../components/Admin/DangKy.vue"),
     meta: { layout: "index" },
-
   },
   // {
   //   path: "/admin/phan-quyen",
