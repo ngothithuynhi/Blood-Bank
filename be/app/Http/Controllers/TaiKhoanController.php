@@ -8,94 +8,125 @@ use Illuminate\Support\Facades\Hash;
 
 class TaiKhoanController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    // Danh sách tài khoản
+    public function getTaiKhoan()
     {
-        $taiKhoans = TaiKhoan::all();
-        return response()->json($taiKhoans, 200);
+        $data = TaiKhoan::all();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Lấy danh sách tài khoản thành công',
+            'data' => $data
+        ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    // Chi tiết tài khoản
+    public function chiTietTaiKhoan(Request $request)
     {
-        $validated = $request->validate([
-            'ma_tai_khoan' => 'required|unique:tai_khoans',
-            'ten_dang_nhap' => 'required|unique:tai_khoans',
-            'mat_khau' => 'required|min:6',
-            'ho_ten' => 'required',
-            'email' => 'required|email',
-            'so_dien_thoai' => 'nullable',
-            'vai_tro' => 'required',
-            'trang_thai' => 'required',
+        $data = TaiKhoan::find($request->ma_tai_khoan);
+
+        if (!$data) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Không tìm thấy tài khoản'
+            ]);
+        }
+
+        return response()->json([
+            'status' => true,
+            'data' => $data
+        ]);
+    }
+
+    // Thêm tài khoản
+    public function themTaiKhoan(Request $request)
+    {
+        $taiKhoan = TaiKhoan::create([
+            'ma_tai_khoan'  => $request->ma_tai_khoan,
+            'ten_dang_nhap' => $request->ten_dang_nhap,
+            'mat_khau'      => Hash::make($request->mat_khau),
+            'ho_ten'        => $request->ho_ten,
+            'email'         => $request->email,
+            'so_dien_thoai' => $request->so_dien_thoai,
+            'vai_tro'       => $request->vai_tro,
+            'trang_thai'    => $request->trang_thai,
         ]);
 
-        $validated['mat_khau'] = Hash::make($validated['mat_khau']);
-
-        $taiKhoan = TaiKhoan::create($validated);
-        return response()->json($taiKhoan, 201);
+        return response()->json([
+            'status' => true,
+            'message' => 'Thêm tài khoản thành công',
+            'data' => $taiKhoan
+        ]);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show($id)
+    // Sửa tài khoản
+    public function suaTaiKhoan(Request $request)
     {
-        $taiKhoan = TaiKhoan::find($id);
-        
+        $taiKhoan = TaiKhoan::find($request->ma_tai_khoan);
+
         if (!$taiKhoan) {
-            return response()->json(['message' => 'Tài khoản không tìm thấy'], 404);
+            return response()->json([
+                'status' => false,
+                'message' => 'Không tìm thấy tài khoản'
+            ]);
         }
 
-        return response()->json($taiKhoan, 200);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id)
-    {
-        $taiKhoan = TaiKhoan::find($id);
-        
-        if (!$taiKhoan) {
-            return response()->json(['message' => 'Tài khoản không tìm thấy'], 404);
-        }
-
-        $validated = $request->validate([
-            'ten_dang_nhap' => 'unique:tai_khoans,ten_dang_nhap,' . $id . ',ma_tai_khoan',
-            'mat_khau' => 'nullable|min:6',
-            'ho_ten' => 'nullable',
-            'email' => 'nullable|email',
-            'so_dien_thoai' => 'nullable',
-            'vai_tro' => 'nullable',
-            'trang_thai' => 'nullable',
+        $taiKhoan->update([
+            'ten_dang_nhap' => $request->ten_dang_nhap,
+            'ho_ten'        => $request->ho_ten,
+            'email'         => $request->email,
+            'so_dien_thoai' => $request->so_dien_thoai,
+            'vai_tro'       => $request->vai_tro,
+            'trang_thai'    => $request->trang_thai,
         ]);
 
-        if (isset($validated['mat_khau'])) {
-            $validated['mat_khau'] = Hash::make($validated['mat_khau']);
-        } else {
-            unset($validated['mat_khau']);
+        if ($request->filled('mat_khau')) {
+            $taiKhoan->update([
+                'mat_khau' => Hash::make($request->mat_khau)
+            ]);
         }
 
-        $taiKhoan->update($validated);
-        return response()->json($taiKhoan, 200);
+        return response()->json([
+            'status' => true,
+            'message' => 'Cập nhật tài khoản thành công',
+            'data' => $taiKhoan
+        ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id)
+    // Xóa tài khoản
+    public function xoaTaiKhoan(Request $request)
     {
-        $taiKhoan = TaiKhoan::find($id);
-        
+        $taiKhoan = TaiKhoan::find($request->ma_tai_khoan);
+
         if (!$taiKhoan) {
-            return response()->json(['message' => 'Tài khoản không tìm thấy'], 404);
+            return response()->json([
+                'status' => false,
+                'message' => 'Không tìm thấy tài khoản'
+            ]);
         }
 
         $taiKhoan->delete();
-        return response()->json(['message' => 'Xóa tài khoản thành công'], 200);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Xóa tài khoản thành công'
+        ]);
+    }
+
+    // Tìm kiếm
+    public function timKiem(Request $request)
+    {
+        $keyword = $request->tim_kiem;
+
+        $data = TaiKhoan::where('ho_ten', 'like', "%$keyword%")
+            ->orWhere('email', 'like', "%$keyword%")
+            ->orWhere('ten_dang_nhap', 'like', "%$keyword%")
+            ->orWhere('so_dien_thoai', 'like', "%$keyword%")
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'data' => $data
+        ]);
     }
 }
