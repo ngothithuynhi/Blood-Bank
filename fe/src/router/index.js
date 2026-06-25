@@ -7,27 +7,24 @@ const routes = [
   // },
 
   // ============= Admin ==================
-  // {
-  //   path: "/admin",
-  //   component: () => import("../components/Admin/TrangChu/index.vue"),
-  //   beforeEnter: checkToken,
-  // },
-  // {
-  //   path: "/admin/them-tour",
-  //   component: () => import("../components/Admin/QLTour/ThemTour/index.vue"),
-  //   beforeEnter: checkToken,
-  // },
-  // {
-  //   path: "/admin/danh-sach-tour",
-  //   component: () =>
-  //     import("../components/Admin/QLTour/DanhSachTour/index.vue"),
-  //   beforeEnter: checkToken,
-  // },
-  // {
-  //   path: "/admin/quan-ly-booking",
-  //   component: () => import("../components/Admin/QLBooking/index.vue"),
-  //   beforeEnter: checkToken,
-  // },
+  {
+    path: "/admin/nguoi-dung",
+    component: () => import("../components/Admin/NguoiDung.vue"),
+    // beforeEnter: checkToken,
+  },
+  {
+    path: "/admin/kho-mau",
+    component: () => import("../components/Admin/KhoMau.vue"),
+    // beforeEnter: checkToken,
+  },
+  {
+    path: "/dang-nhap",
+    component: () => import("../components/Admin/DangNhap.vue"),
+  },
+  {
+    path: "/dang-ky",
+    component: () => import("../components/Admin/DangKy.vue"),
+  },
   // {
   //   path: "/admin/phan-quyen",
   //   component: () => import("../components/Admin/PhanQuyen/index.vue"),
@@ -197,10 +194,9 @@ const routes = [
   //   meta: { layout: "customer" },
   // },
   {
-  path: "/staff",
-  redirect: "/admin", // hoặc "/admin/trang-chu"
-}
-
+    path: "/staff",
+    redirect: "/admin", // hoặc "/admin/trang-chu"
+  },
 ];
 
 const router = createRouter({
@@ -210,7 +206,6 @@ const router = createRouter({
     // Luôn cuộn lên đầu trang
     return { top: 0 };
   },
-
 });
 
 export default router;
