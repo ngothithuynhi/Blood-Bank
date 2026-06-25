@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens;
 
-class TaiKhoan extends Model
+class TaiKhoan extends Authenticatable
 {
+    use HasApiTokens;
+
     protected $primaryKey = 'ma_tai_khoan';
     public $incrementing = false;
     protected $keyType = 'string';
@@ -24,6 +27,18 @@ class TaiKhoan extends Model
     protected $hidden = [
         'mat_khau',
     ];
+
+    protected $appends = ['id_chuc_vu'];
+
+    public function getIdChucVuAttribute()
+    {
+        if ($this->vai_tro === 'admin') {
+            return 1;
+        } elseif ($this->vai_tro === 'staff') {
+            return 2;
+        }
+        return 3;
+    }
 
     public function khoMaus()
     {

@@ -13,7 +13,10 @@ class KhoMauController extends Controller
     public function index()
     {
         $khoMaus = KhoMau::with('taiKhoan')->get();
-        return response()->json($khoMaus, 200);
+        return response()->json([
+            'status' => true,
+            'data' => $khoMaus
+        ], 200);
     }
 
     /**
@@ -34,7 +37,11 @@ class KhoMauController extends Controller
         ]);
 
         $khoMau = KhoMau::create($validated);
-        return response()->json($khoMau, 201);
+        return response()->json([
+            'status' => true,
+            'message' => 'Thêm kho máu thành công.',
+            'data' => $khoMau
+        ], 201);
     }
 
     /**
@@ -45,21 +52,31 @@ class KhoMauController extends Controller
         $khoMau = KhoMau::with('taiKhoan')->find($id);
         
         if (!$khoMau) {
-            return response()->json(['message' => 'Kho máu không tìm thấy'], 404);
+            return response()->json([
+                'status' => false,
+                'message' => 'Kho máu không tìm thấy'
+            ], 404);
         }
 
-        return response()->json($khoMau, 200);
+        return response()->json([
+            'status' => true,
+            'data' => $khoMau
+        ], 200);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
+        $id = $request->input('ma_kho_mau');
         $khoMau = KhoMau::find($id);
         
         if (!$khoMau) {
-            return response()->json(['message' => 'Kho máu không tìm thấy'], 404);
+            return response()->json([
+                'status' => false,
+                'message' => 'Kho máu không tìm thấy'
+            ], 404);
         }
 
         $validated = $request->validate([
@@ -74,22 +91,53 @@ class KhoMauController extends Controller
         ]);
 
         $khoMau->update($validated);
-        return response()->json($khoMau, 200);
+        return response()->json([
+            'status' => true,
+            'message' => 'Cập nhật thông tin Kho Máu thành công.',
+            'data' => $khoMau
+        ], 200);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy(Request $request)
     {
+        $id = $request->input('ma_kho_mau');
         $khoMau = KhoMau::find($id);
         
         if (!$khoMau) {
-            return response()->json(['message' => 'Kho máu không tìm thấy'], 404);
+            return response()->json([
+                'status' => false,
+                'message' => 'Kho máu không tìm thấy'
+            ], 404);
         }
 
         $khoMau->delete();
-        return response()->json(['message' => 'Xóa kho máu thành công'], 200);
+        return response()->json([
+            'status' => true,
+            'message' => 'Xóa túi máu thành công.'
+        ], 200);
+    }
+
+    /**
+     * Search blood inventory
+     */
+    public function timKiem(Request $request)
+    {
+        $query = $request->input('tim_kho_mau');
+        $khoMaus = KhoMau::with('taiKhoan')
+            ->where(function($q) use ($query) {
+                $q->where('ma_kho_mau', 'like', "%{$query}%")
+                  ->orWhere('nhom_mau', 'like', "%{$query}%")
+                  ->orWhere('vi_tri_luu_tru', 'like', "%{$query}%");
+            })
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'data' => $khoMaus
+        ], 200);
     }
 
     /**
@@ -98,7 +146,10 @@ class KhoMauController extends Controller
     public function getByBloodGroup($nhomMau)
     {
         $khoMaus = KhoMau::where('nhom_mau', $nhomMau)->get();
-        return response()->json($khoMaus, 200);
+        return response()->json([
+            'status' => true,
+            'data' => $khoMaus
+        ], 200);
     }
 
     /**
@@ -107,6 +158,10 @@ class KhoMauController extends Controller
     public function getLowStock()
     {
         $khoMaus = KhoMau::whereRaw('so_luong <= muc_canh_bao')->get();
-        return response()->json($khoMaus, 200);
+        return response()->json([
+            'status' => true,
+            'data' => $khoMaus
+        ], 200);
     }
 }
+

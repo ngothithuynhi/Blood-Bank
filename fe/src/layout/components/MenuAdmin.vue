@@ -15,6 +15,12 @@
         <span>Quản lý Tài Khoản</span>
       </router-link>
 
+      <!-- Quản lý kho máu -->
+      <router-link to="/admin/kho-mau" class="menu-item" active-class="active">
+        <i class="fa-solid fa-droplet icon text-danger"></i>
+        <span>Quản lý Kho Máu</span>
+      </router-link>
+      
       <!-- QUẢN LÝ TOUR -->
       <div class="menu-group">
         <div class="menu-item dropdown" @click="toggleTour">
